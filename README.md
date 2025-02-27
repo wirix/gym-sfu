@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Спринт 1: Базовый функционал календаря и тренировок
+Задача 1: Создан экран календаря с отображением дней месяца.
 
-## Getting Started
+Задача 2: Реализована возможность пометки дней, когда человек посетил зал.
 
-First, run the development server:
+Задача 3: Реализован подсчет общего количества тренировок за месяц.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Спринт 2: Работа с базой данных и создание тренировок
+Задача 4: Создана "моковая" база данных с предустановленным списком упражнений.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Задача 5: Добавлена возможность создания индивидуальной тренировки.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Задача 6: Реализован список упражнений при добавлении упражнения в индивидуальную тренировку.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Спринт 3: Управление тренировками и расширение функционала
+Задача 8: Реализовано добавление и удаление упражнений из индивидуальной тренировки (опционально с видео).
 
-## Learn More
+Задача 9: Добавлены описание и изображение в "моковую" БД для каждого упражнения.
 
-To learn more about Next.js, take a look at the following resources:
+Задача 10: Реализовано сохранение нескольких индивидуальных тренировок.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Задача 14: Реализована запись результатов тренировки (тоннаж, интенсивность, длительность).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Спринт 4: Интеграция тренировок с календарем
+Задача 11: Реализовано назначение тренировки на календарный день.
 
-## Deploy on Vercel
+Задача 15: Реализована возможность отображения результатов с предыдущей тренировки на текущей тренировке.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Задача 16: Добавлена возможность написания заметок к тренировке.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Задача 17: Реализовано добавление текущего веса после тренировки.
+
+Спринт 5: Статистика и аналитика
+Задача 19: Реализовано отображение тоннажа и длительности тренировки на графике.
+
+Задача 20: Добавлен процент усилия в подходе (разминка, низкий, средний, сложный, максимум).
+
+Задача 21: Добавлена статистика по всем тренировкам.
+
+Спринт 6: Дополнительные функции и улучшения
+Задача 12: Добавлен секундомер при начале тренировки.
+
+Задача 13: Реализована возможность настройки количества подходов и повторений для каждого упражнения.
+
+Задача 22: Добавлена регистрация пользователя.
+
+Спринт 7:
+Задача 7: Добавлена возможность создания своего упражнения.
+
+Задача 18: Реализовано отображение веса в виде графика.
