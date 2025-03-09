@@ -4,7 +4,7 @@ import { MyCalendar } from '@/components/native/Calendar';
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="min-h-screen px-24 py-12">
       <MyCalendar />
     </main>
   );
