@@ -22,6 +22,7 @@ interface IndividualTrainingStore {
   removeTemplate: (id: string) => void; // Удалить шаблон
   getTrainingsByDate: (date: Date) => IndividualTraining[]; // Получить тренировки по дате
   getTemplateById: (id: string) => TrainingTemplate | undefined; // Получить шаблон по ID
+  updateTemplate: (id: string, exerciseIds: string[]) => void;
 }
 
 export const useIndividualTrainingStore = create<IndividualTrainingStore>((set, get) => ({
@@ -81,5 +82,13 @@ export const useIndividualTrainingStore = create<IndividualTrainingStore>((set, 
   // Получить шаблон по ID
   getTemplateById: (id) => {
     return get().templates.find((template) => template.id === id);
+  },
+
+  updateTemplate: (id, exerciseIds) => {
+    set((state) => ({
+      templates: state.templates.map((template) =>
+        template.id === id ? { ...template, exerciseIds } : template,
+      ),
+    }));
   },
 }));
