@@ -6,6 +6,7 @@ import { exercises } from '@/lib/mock/db-exercises'; // Импортируем �
 import Image from 'next/image';
 import { useIndividualTrainingStore } from '@/lib/zustand/individualTraining';
 import { TrainingScreen } from './TrainingScreen';
+import { useTrainingStore } from '@/lib/zustand/trainingСalendar';
 
 interface CreateTrainingProps {
   selectedDate: Date;
@@ -152,7 +153,7 @@ export const EditTemplateExercises: React.FC<EditTemplateExercisesProps> = ({
 export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) => {
   const { trainings, templates, addTraining, updateTemplate, removeTraining, getTrainingsByDate } =
     useIndividualTrainingStore();
-
+  console.log(trainings);
   const [isExerciseListVisible, setIsExerciseListVisible] = useState(false);
   const [isTemplateListVisible, setIsTemplateListVisible] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);

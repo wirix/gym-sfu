@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { Button } from '../ui/button';
 import { ActiveTraining } from './ExerciseList';
 import { Input } from '../ui/input';
 import { Slider } from '../ui/slider';
+import { Textarea } from '../ui/textarea';
 
 interface TrainingScreenProps {
   training: ActiveTraining;
@@ -16,6 +17,9 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFini
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
   const [currentExercises, setCurrentExercises] = useState(training.exercises);
+
+  const [currentWeight, setCurrentWeight] = useState<number | null>(null);
+  const [description, setDescription] = useState<string | null>(null);
 
   // Секундомер
   useEffect(() => {
@@ -69,7 +73,13 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFini
     <div className="relative min-h-screen pb-24">
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-6">Тренировка</h2>
-
+        <div className="mb-4">
+          <Textarea
+            value={currentWeight || ''}
+            onChange={(e) => setCurrentWeight(e.target.value ? Number(e.target.value) : undefined)}
+            placeholder="Введите ваш текущий вес"
+          />
+        </div>
         <div className="space-y-8">
           {currentExercises.map((exercise) => (
             <div key={exercise.id} className="border rounded-lg p-4">
@@ -136,6 +146,15 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFini
               </Button>
             </div>
           ))}
+        </div>
+        <div className="mt-6">
+          <label className="block text-sm font-medium mb-1">Заметки к тренировке</label>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Запишите свои заметки о тренировке..."
+            className="min-h-[100px]"
+          />
         </div>
 
         <Button className="mt-8 w-full" onClick={onFinish}>
