@@ -16,6 +16,7 @@ export const MyCalendar: React.FC = () => {
   const [isOpenCreateTraining, setIsOpenCreateTraining] = useState(false);
 
   const { calendar } = useTrainingStore();
+  console.log("🚀 ~ calendar:", calendar)
   const { trainings: individualTrainings } = useIndividualTrainingStore();
 
   // Обработчик изменения даты в календаре

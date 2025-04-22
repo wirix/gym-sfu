@@ -10,16 +10,24 @@ import { Textarea } from '../ui/textarea';
 
 interface TrainingScreenProps {
   training: ActiveTraining;
-  onFinish: () => void;
+  onFinish: (updatedExercises: ActiveTraining['exercises']) => void;
+  currentWeight: number | null;
+  onWeightChange: (weight: number | null) => void;
+  description: string;
+  onDescriptionChange: (desc: string) => void;
 }
 
-export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFinish }) => {
+export const TrainingScreen: React.FC<TrainingScreenProps> = ({
+  training,
+  onFinish,
+  currentWeight,
+  onWeightChange,
+  description,
+  onDescriptionChange,
+}) => {
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
   const [currentExercises, setCurrentExercises] = useState(training.exercises);
-
-  const [currentWeight, setCurrentWeight] = useState<number | null>(null);
-  const [description, setDescription] = useState<string | null>(null);
 
   // Секундомер
   useEffect(() => {
@@ -62,6 +70,9 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFini
       ),
     );
   };
+  const handleFinish = () => {
+    onFinish(currentExercises); // Передаем обновленные упражнения
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -76,7 +87,7 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFini
         <div className="mb-4">
           <Textarea
             value={currentWeight || ''}
-            onChange={(e) => setCurrentWeight(e.target.value ? Number(e.target.value) : undefined)}
+            onChange={(e) => onWeightChange(e.target.value ? Number(e.target.value) : null)}
             placeholder="Введите ваш текущий вес"
           />
         </div>
@@ -95,9 +106,13 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFini
                         placeholder="Вес (кг)"
                         value={approach.weight ?? ''}
                         onChange={(e) =>
-                          handleValueChange(exercise.id, approach.id, 'weight', +e.target.value)
+                          handleValueChange(
+                            exercise.id,
+                            approach.id,
+                            'weight',
+                            e.target.value === '' ? null : Number(e.target.value),
+                          )
                         }
-                        className="w-24" // Опционально: фиксированная ширина
                       />
                     </div>
                     <div>
@@ -151,13 +166,13 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFini
           <label className="block text-sm font-medium mb-1">Заметки к тренировке</label>
           <Textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => onDescriptionChange(e.target.value)}
             placeholder="Запишите свои заметки о тренировке..."
             className="min-h-[100px]"
           />
         </div>
 
-        <Button className="mt-8 w-full" onClick={onFinish}>
+        <Button className="mt-8 w-full" onClick={handleFinish}>
           Завершить тренировку
         </Button>
       </div>
@@ -171,7 +186,7 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({ training, onFini
             {isRunning ? 'Пауза' : 'Продолжить'}
           </Button>
           <div className="text-2xl font-mono">{formatTime(time)}</div>
-          <Button variant="ghost" onClick={onFinish}>
+          <Button variant="ghost" onClick={handleFinish}>
             Завершить
           </Button>
         </div>

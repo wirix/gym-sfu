@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
-import { exercises } from '@/lib/mock/db-exercises'; // Импортируем моковые данные
+import { exercises } from '@/lib/mock/db-exercises';
 import Image from 'next/image';
 import { useIndividualTrainingStore } from '@/lib/zustand/individualTraining';
 import { TrainingScreen } from './TrainingScreen';
@@ -153,11 +153,14 @@ export const EditTemplateExercises: React.FC<EditTemplateExercisesProps> = ({
 export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) => {
   const { trainings, templates, addTraining, updateTemplate, removeTraining, getTrainingsByDate } =
     useIndividualTrainingStore();
-  console.log(trainings);
+  console.log('🚀 ~ trainings:', trainings); //
+
   const [isExerciseListVisible, setIsExerciseListVisible] = useState(false);
   const [isTemplateListVisible, setIsTemplateListVisible] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(null);
+  const [currentWeight, setCurrentWeight] = useState<number | null>(null);
+  const [description, setDescription] = useState<string>('');
 
   const trainingsForDate = getTrainingsByDate(selectedDate);
   const editingTemplate = templates.find((t) => t.id === editingTemplateId);
@@ -198,29 +201,55 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
       exercises: training.exerciseIds.map((exId) => ({
         id: exId,
         title: exercises.find((e) => e.id === exId)?.title || exId,
-        approaches: [{ id: '1', weight: null, reps: null, feeling: null }],
+        approaches: [{ id: Date.now().toString(), weight: null, reps: null, feeling: null }],
       })),
     });
   };
 
-  const handleFinishTraining = () => {
-    const endTime = new Date();
-    const duration = Math.floor((endTime.getTime() - activeTraining!.startTime.getTime()) / 1000);
-    const tonnage = activeTraining!.exercises.reduce((sum, ex) => {
-      return (
-        sum +
-        ex.approaches.reduce((exSum, app) => {
-          return exSum + (app.weight || 0) * (app.reps || 0);
-        }, 0)
-      );
-    }, 0);
+  const handleFinishTraining = (updatedExercises: ActiveTraining['exercises']) => {
+    if (!activeTraining) return;
 
-    alert(`Тренировка завершена!\nДлительность: ${duration} сек\nТоннаж: ${tonnage} кг`);
+    const endTime = new Date();
+    const duration = Math.floor((endTime.getTime() - activeTraining.startTime.getTime()) / 1000);
+
+    const calendarTraining = {
+      id: activeTraining.id,
+      date: selectedDate,
+      description: description, // используем состояние из CreateTraining
+      runtime: duration,
+      wt: currentWeight, // используем состояние из CreateTraining
+      exercises: updatedExercises.map((exercise) => ({
+        id: exercise.id,
+        title: exercise.title,
+        approaches: exercise.approaches.map((approach) => ({
+          id: approach.id,
+          wt: approach.weight,
+          reps: approach.reps,
+          feeling: approach.feeling,
+        })),
+      })),
+    };
+
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    useTrainingStore.getState().addTraining(year, month, calendarTraining);
+
     setActiveTraining(null);
+    setCurrentWeight(null);
+    setDescription('');
   };
 
   if (activeTraining) {
-    return <TrainingScreen training={activeTraining} onFinish={handleFinishTraining} />;
+    return (
+      <TrainingScreen
+        training={activeTraining}
+        onFinish={handleFinishTraining}
+        currentWeight={currentWeight}
+        onWeightChange={setCurrentWeight}
+        description={description}
+        onDescriptionChange={setDescription}
+      />
+    );
   }
 
   return (
@@ -260,7 +289,6 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
         ))}
       </ul>
 
-      {/* Остальной код остается без изменений */}
       {isExerciseListVisible ? (
         <ExerciseList exercises={exercises} onSelectExercises={handleAddTraining} />
       ) : isTemplateListVisible ? (
