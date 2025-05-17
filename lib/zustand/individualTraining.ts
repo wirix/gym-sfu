@@ -42,7 +42,7 @@ export const useIndividualTrainingStore = create<IndividualTrainingStore>((set, 
   // Добавить шаблон тренировки
   addTemplate: (description, exerciseIds) => {
     const newTemplate: TrainingTemplate = {
-      id: Math.random().toString(36).substring(2, 9), // Генерация уникального ID
+      id: Math.random().toString(36).substring(2, 9),
       description,
       exerciseIds,
     };

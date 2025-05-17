@@ -7,6 +7,9 @@ import Image from 'next/image';
 import { useIndividualTrainingStore } from '@/lib/zustand/individualTraining';
 import { TrainingScreen } from './TrainingScreen';
 import { useTrainingStore } from '@/lib/zustand/trainingСalendar';
+import { Textarea } from '../ui/textarea';
+import { Input } from '../ui/input';
+import { useExercisesStore } from '@/lib/zustand/exercisesStore';
 
 interface CreateTrainingProps {
   selectedDate: Date;
@@ -45,8 +48,15 @@ export interface ActiveTraining {
   }[];
 }
 
-const ExerciseList: React.FC<ExerciseListProps> = ({ exercises, onSelectExercises }) => {
+export const ExerciseList: React.FC<ExerciseListProps> = ({ onSelectExercises }) => {
+  const { exercises, addExercise } = useExercisesStore();
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [newExercise, setNewExercise] = useState({
+    title: '',
+    img: '',
+    description: '',
+  });
 
   const handleSelectExercise = (exerciseId: string) => {
     setSelectedExercises((prev) =>
@@ -59,9 +69,58 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ exercises, onSelectExercise
     setSelectedExercises([]);
   };
 
+  const handleAddCustomExercise = () => {
+    if (newExercise.title.trim()) {
+      addExercise({
+        title: newExercise.title,
+        img: newExercise.img || '/default-exercise.jpg',
+        description: newExercise.description,
+      });
+      setNewExercise({ title: '', img: '', description: '' });
+      setIsAddingCustom(false);
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-50 rounded-lg shadow-md max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-6 text-center">Выберите упражнения для тренировки</h2>
+
+      {isAddingCustom ? (
+        <div className="space-y-4 mb-6 p-4 border rounded-lg">
+          <h3 className="text-lg font-semibold">Добавить свое упражнение</h3>
+          <Input
+            placeholder="Название упражнения"
+            value={newExercise.title}
+            onChange={(e) => setNewExercise({ ...newExercise, title: e.target.value })}
+          />
+          <Input
+            placeholder="URL изображения (необязательно)"
+            value={newExercise.img}
+            onChange={(e) => setNewExercise({ ...newExercise, img: e.target.value })}
+          />
+          <Textarea
+            placeholder="Описание упражнения"
+            value={newExercise.description}
+            onChange={(e) => setNewExercise({ ...newExercise, description: e.target.value })}
+          />
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsAddingCustom(false)} className="flex-1">
+              Отмена
+            </Button>
+            <Button
+              onClick={handleAddCustomExercise}
+              disabled={!newExercise.title.trim()}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white">
+              Добавить
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button onClick={() => setIsAddingCustom(true)} variant="outline" className="w-full mb-6">
+          + Добавить свое упражнение
+        </Button>
+      )}
+
       <div className="space-y-4">
         {exercises.map((exercise) => (
           <div
@@ -74,7 +133,15 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ exercises, onSelectExercise
             onClick={() => handleSelectExercise(exercise.id)}>
             <div className="flex items-center space-x-4">
               <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                <Image src={exercise.img} alt={exercise.title} fill className="object-cover" />
+                <Image
+                  src={exercise.img || '/default-exercise.jpg'}
+                  alt={exercise.title}
+                  fill
+                  className="object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/default-exercise.jpg';
+                  }}
+                />
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-1">{exercise.title}</h3>
@@ -84,6 +151,7 @@ const ExerciseList: React.FC<ExerciseListProps> = ({ exercises, onSelectExercise
           </div>
         ))}
       </div>
+
       <button
         onClick={handleConfirmSelection}
         disabled={selectedExercises.length === 0}
@@ -265,12 +333,17 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
                 <p className="font-semibold">
                   Тренировка от {training.date.toLocaleDateString('ru-RU')}
                 </p>
-                <p>
-                  Упражнения:{' '}
-                  {training.exerciseIds
-                    .map((id) => exercises.find((ex) => ex.id === id)?.title || id)
-                    .join(', ')}
-                </p>
+                {/* Измененная часть - список упражнений */}
+                <ul className="list-disc pl-5 mt-1">
+                  {training.exerciseIds.map((id) => {
+                    const exercise = exercises.find((ex) => ex.id === id);
+                    return (
+                      <li key={id} className="text-sm">
+                        {exercise?.title || id}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" onClick={() => handleStartTraining(training.id)}>
@@ -300,47 +373,83 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
           />
         ) : (
           <div>
-            <h3 className="text-lg font-bold mb-2">Выберите шаблон тренировки:</h3>
-            <ul className="space-y-2">
-              {templates.map((template) => (
-                <li key={template.id} className="p-2 border rounded-lg hover:bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold">{template.description || 'Без названия'}</p>
-                      <p className="text-sm text-gray-600">
-                        Упражнения:{' '}
-                        {template.exerciseIds
-                          .map((id) => exercises.find((ex) => ex.id === id)?.title || id)
-                          .join(', ')}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddTrainingFromTemplate(template.id);
-                        }}>
-                        Выбрать
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingTemplateId(template.id);
-                        }}>
-                        Редактировать
-                      </Button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <Button onClick={() => setIsTemplateListVisible(false)} className="mt-4">
-              Назад
-            </Button>
+            <h3 className="text-lg font-bold mb-2">
+              {editingTemplateId ? 'Редактирование шаблона' : 'Выберите шаблон тренировки:'}
+            </h3>
+
+            {editingTemplateId ? (
+              <div className="space-y-4">
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <h4 className="font-medium mb-2">Текущие упражнения:</h4>
+                  <ul className="list-disc pl-5">
+                    {editingTemplate?.exerciseIds.map((id) => {
+                      const exercise = exercises.find((ex) => ex.id === id);
+                      return <li key={id}>{exercise?.title || id}</li>;
+                    })}
+                  </ul>
+                </div>
+
+                <ExerciseList
+                  exercises={exercises}
+                  onSelectExercises={(selectedIds) => {
+                    if (editingTemplateId) {
+                      updateTemplate(editingTemplateId, selectedIds);
+                      setEditingTemplateId(null);
+                    }
+                  }}
+                />
+
+                <Button
+                  variant="outline"
+                  onClick={() => setEditingTemplateId(null)}
+                  className="w-full">
+                  Отменить редактирование
+                </Button>
+              </div>
+            ) : (
+              <>
+                <ul className="space-y-2">
+                  {templates.map((template) => (
+                    <li key={template.id} className="p-2 border rounded-lg hover:bg-gray-50">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold">{template.description || 'Без названия'}</p>
+                          <ul className="list-disc pl-5 mt-1 text-sm text-gray-600">
+                            {template.exerciseIds.map((id) => {
+                              const exercise = exercises.find((ex) => ex.id === id);
+                              return <li key={id}>{exercise?.title || id}</li>;
+                            })}
+                          </ul>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddTrainingFromTemplate(template.id);
+                            }}>
+                            Выбрать
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingTemplateId(template.id);
+                            }}>
+                            Изменить
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <Button onClick={() => setIsTemplateListVisible(false)} className="mt-4">
+                  Назад
+                </Button>
+              </>
+            )}
           </div>
         )
       ) : (
