@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 
 interface IndividualTraining {
-  id: string; // Уникальный ID тренировки
-  date: Date; // Дата тренировки
-  exerciseIds: string[]; // Массив ID упражнений
+  id: string;
+  date: Date;
+  name: string; // Добавляем название
+  exerciseIds: string[];
+  description?: string;
 }
 
 interface TrainingTemplate {
@@ -15,9 +17,9 @@ interface TrainingTemplate {
 interface IndividualTrainingStore {
   trainings: IndividualTraining[]; // Список всех тренировок
   templates: TrainingTemplate[]; // Список шаблонов тренировок
-  addTraining: (date: Date, exerciseIds: string[]) => void; // Добавить тренировку
+  addTraining: (date: Date, name: string, exerciseIds: string[], description?: string) => void;
+  updateTraining: (id: string, name: string, exerciseIds: string[], description?: string) => void;
   addTemplate: (description: string, exerciseIds: string[]) => void; // Добавить шаблон
-  updateTraining: (id: string, exerciseIds: string[]) => void; // Обновить тренировку
   removeTraining: (id: string) => void; // Удалить тренировку
   removeTemplate: (id: string) => void; // Удалить шаблон
   getTrainingsByDate: (date: Date) => IndividualTraining[]; // Получить тренировки по дате
@@ -27,14 +29,16 @@ interface IndividualTrainingStore {
 
 export const useIndividualTrainingStore = create<IndividualTrainingStore>((set, get) => ({
   trainings: [], // Начальное состояние — пустой список тренировок
-  templates: [{ id: '1', description: '', exerciseIds: ['1', '2'] }], // Начальное состояние — пустой список шаблонов
+  templates: [{ id: '1', description: 'Тяги', exerciseIds: ['1', '2'] }], // Начальное состояние — пустой список шаблонов
 
   // Добавить тренировку
-  addTraining: (date, exerciseIds) => {
+  addTraining: (date, name, exerciseIds, description = '') => {
     const newTraining: IndividualTraining = {
-      id: Math.random().toString(36).substring(2, 9), // Генерация уникального ID
+      id: Math.random().toString(36).substring(2, 9),
       date,
+      name,
       exerciseIds,
+      description,
     };
     set((state) => ({ trainings: [...state.trainings, newTraining] }));
   },

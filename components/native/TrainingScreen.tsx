@@ -21,6 +21,7 @@ interface TrainingScreenProps {
 export const TrainingScreen: React.FC<TrainingScreenProps> = ({
   training,
   onFinish,
+  
   currentWeight,
   onWeightChange,
   description,
@@ -100,7 +101,7 @@ export const TrainingScreen: React.FC<TrainingScreenProps> = ({
   return (
     <div className="relative min-h-screen pb-24">
       <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6">Тренировка</h2>
+        <h2 className="text-2xl font-bold mb-2">{training.name}</h2>
         <div className="mb-4">
           <Textarea
             value={currentWeight || ''}

@@ -21,6 +21,7 @@ interface Training {
   runtime: number;
   wt: number | null;
   exercises: Exercise[];
+  isCompleted: boolean; // Добавляем флаг завершенности
 }
 
 interface Month {
@@ -52,6 +53,7 @@ export const useTrainingStore = create<TrainingStore>((set, get) => ({
             description: '',
             runtime: 0,
             wt: null,
+            isCompleted: false,
             exercises: [
               {
                 id: '0',
@@ -66,6 +68,7 @@ export const useTrainingStore = create<TrainingStore>((set, get) => ({
             date: new Date(2025, 2, 11),
             description: '',
             runtime: 0,
+            isCompleted: false,
             wt: null,
             exercises: [
               {

@@ -35,7 +35,9 @@ interface ExerciseListProps {
 
 export interface ActiveTraining {
   id: string;
+  name: string;
   startTime: Date;
+  description?: string;
   exercises: {
     id: string;
     title: string;
@@ -171,6 +173,7 @@ export const EditTemplateExercises: React.FC<EditTemplateExercisesProps> = ({
   onSave,
   onCancel,
 }) => {
+  const { exercises } = useExercisesStore(); // Добавляем этот хук
   const [selectedExercises, setSelectedExercises] = useState<string[]>(initialExerciseIds);
 
   const handleSelectExercise = (exerciseId: string) => {
@@ -183,26 +186,35 @@ export const EditTemplateExercises: React.FC<EditTemplateExercisesProps> = ({
     <div className="p-6 bg-gray-50 rounded-lg shadow-md max-w-4xl mx-auto mt-4">
       <h2 className="text-2xl font-bold mb-6 text-center">Редактирование шаблона</h2>
       <div className="space-y-4">
-        {exercises.map((exercise) => (
-          <div
-            key={exercise.id}
-            className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
-              selectedExercises.includes(exercise.id)
-                ? 'border-blue-500 shadow-lg'
-                : 'border-gray-200 hover:shadow-md'
-            }`}
-            onClick={() => handleSelectExercise(exercise.id)}>
-            <div className="flex items-center space-x-4">
-              <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                <Image src={exercise.img} alt={exercise.title} fill className="object-cover" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-1">{exercise.title}</h3>
-                <p className="text-gray-600 text-sm line-clamp-2">{exercise.description}</p>
+        {exercises.map(
+          (
+            exercise, // Используем exercises из хранилища
+          ) => (
+            <div
+              key={exercise.id}
+              className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+                selectedExercises.includes(exercise.id)
+                  ? 'border-blue-500 shadow-lg'
+                  : 'border-gray-200 hover:shadow-md'
+              }`}
+              onClick={() => handleSelectExercise(exercise.id)}>
+              <div className="flex items-center space-x-4">
+                <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                  <Image
+                    src={exercise.img || '/default-exercise.jpg'}
+                    alt={exercise.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-1">{exercise.title}</h3>
+                  <p className="text-gray-600 text-sm line-clamp-2">{exercise.description}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ),
+        )}
       </div>
       <div className="flex gap-4 mt-6">
         <Button
@@ -221,7 +233,6 @@ export const EditTemplateExercises: React.FC<EditTemplateExercisesProps> = ({
 export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) => {
   const { trainings, templates, addTraining, updateTemplate, removeTraining, getTrainingsByDate } =
     useIndividualTrainingStore();
-  console.log('🚀 ~ trainings:', trainings); //
 
   const [isExerciseListVisible, setIsExerciseListVisible] = useState(false);
   const [isTemplateListVisible, setIsTemplateListVisible] = useState(false);
@@ -229,6 +240,11 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
   const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(null);
   const [currentWeight, setCurrentWeight] = useState<number | null>(null);
   const [description, setDescription] = useState<string>('');
+  const [trainingDescription, setTrainingDescription] = useState('');
+  const [trainingName, setTrainingName] = useState('Моя тренировка');
+  const [isCreateTemplateModalOpen, setIsCreateTemplateModalOpen] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const { addTemplate } = useIndividualTrainingStore();
 
   const trainingsForDate = getTrainingsByDate(selectedDate);
   const editingTemplate = templates.find((t) => t.id === editingTemplateId);
@@ -241,15 +257,32 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
   };
 
   const handleAddTraining = (exerciseIds: string[]) => {
-    addTraining(selectedDate, exerciseIds);
+    if (!trainingName.trim()) {
+      alert('Пожалуйста, введите название тренировки');
+      return;
+    }
+    addTraining(selectedDate, trainingName, exerciseIds, trainingDescription);
     setIsExerciseListVisible(false);
+    setTrainingName('Моя тренировка');
+    setTrainingDescription('');
   };
 
   const handleAddTrainingFromTemplate = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
-    if (template) {
-      addTraining(selectedDate, template.exerciseIds);
-      setIsTemplateListVisible(false);
+    if (!template) return;
+
+    addTraining(
+      selectedDate,
+      template.description, // Используем описание шаблона как название тренировки
+      template.exerciseIds,
+      `Создано из шаблона: ${template.description}`,
+    );
+    setIsTemplateListVisible(false);
+  };
+
+  const removeTemplate = (id: string) => {
+    if (confirm('Вы уверены, что хотите удалить этот шаблон?')) {
+      useIndividualTrainingStore.getState().removeTemplate(id);
     }
   };
 
@@ -265,7 +298,9 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
 
     setActiveTraining({
       id: training.id,
+      name: training.name, // Передаем название
       startTime: new Date(),
+      description: training.description,
       exercises: training.exerciseIds.map((exId) => ({
         id: exId,
         title: exercises.find((e) => e.id === exId)?.title || exId,
@@ -330,10 +365,11 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
           <li key={training.id} className="p-2 border rounded-lg group hover:bg-gray-50">
             <div className="flex justify-between items-center">
               <div>
-                <p className="font-semibold">
-                  Тренировка от {training.date.toLocaleDateString('ru-RU')}
-                </p>
-                {/* Измененная часть - список упражнений */}
+                <p className="font-semibold text-lg">{training.name}</p>
+                <p className="text-sm text-gray-500">{training.date.toLocaleDateString('ru-RU')}</p>
+                {training.description && (
+                  <p className="text-sm text-gray-600 mt-1">{training.description}</p>
+                )}
                 <ul className="list-disc pl-5 mt-1">
                   {training.exerciseIds.map((id) => {
                     const exercise = exercises.find((ex) => ex.id === id);
@@ -361,96 +397,136 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
           </li>
         ))}
       </ul>
+      {isTemplateListVisible && (
+        <div>
+          <h3 className="text-lg font-bold mb-2">Шаблоны тренировок:</h3>
 
+          {/* Кнопка создания шаблона */}
+          <Button
+            onClick={() => setIsCreateTemplateModalOpen(true)}
+            className="mb-4 bg-green-500 hover:bg-green-600 text-white">
+            + Создать новый шаблон
+          </Button>
+
+          {/* Список шаблонов */}
+          <ul className="space-y-2">
+            {templates.map((template) => (
+              <li key={template.id} className="p-2 border rounded-lg hover:bg-gray-50">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{template.description}</p>
+                    <ul className="list-disc pl-5 mt-1 text-sm text-gray-600">
+                      {template.exerciseIds.map((id) => {
+                        const exercise = exercises.find((ex) => ex.id === id);
+                        return <li key={id}>{exercise?.title || id}</li>;
+                      })}
+                    </ul>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddTrainingFromTemplate(template.id);
+                      }}>
+                      Выбрать
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingTemplateId(template.id);
+                      }}>
+                      Редактировать
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-500 hover:text-red-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('Удалить этот шаблон?')) {
+                          removeTemplate(template.id);
+                        }
+                      }}>
+                      Удалить
+                    </Button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Кнопка назад */}
+          <Button onClick={() => setIsTemplateListVisible(false)} className="mt-4">
+            Назад
+          </Button>
+
+          {/* Модальное окно создания шаблона */}
+          {isCreateTemplateModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white p-6 rounded-lg w-full max-w-md">
+                <h3 className="text-lg font-bold mb-4">Создать новый шаблон</h3>
+                <Input
+                  placeholder="Название шаблона*"
+                  value={newTemplateName}
+                  onChange={(e) => setNewTemplateName(e.target.value)}
+                  className="mb-4"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsCreateTemplateModalOpen(false);
+                      setNewTemplateName('');
+                    }}
+                    className="flex-1">
+                    Отмена
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      if (newTemplateName.trim()) {
+                        addTemplate(newTemplateName.trim(), []);
+                        setIsCreateTemplateModalOpen(false);
+                        setNewTemplateName('');
+                      }
+                    }}
+                    disabled={!newTemplateName.trim()}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white">
+                    Создать
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {isExerciseListVisible ? (
-        <ExerciseList exercises={exercises} onSelectExercises={handleAddTraining} />
+        <div className="space-y-4">
+          <Input
+            placeholder="Название тренировки*"
+            value={trainingName}
+            onChange={(e) => setTrainingName(e.target.value)}
+            className="mb-2"
+            required
+          />
+          <Textarea
+            placeholder="Описание тренировки (необязательно)"
+            value={trainingDescription}
+            onChange={(e) => setTrainingDescription(e.target.value)}
+            className="mb-4"
+          />
+          <ExerciseList exercises={exercises} onSelectExercises={handleAddTraining} />
+        </div>
       ) : isTemplateListVisible ? (
-        editingTemplateId ? (
+        editingTemplateId && (
           <EditTemplateExercises
             initialExerciseIds={editingTemplate?.exerciseIds || []}
             onSave={handleSaveTemplate}
             onCancel={() => setEditingTemplateId(null)}
           />
-        ) : (
-          <div>
-            <h3 className="text-lg font-bold mb-2">
-              {editingTemplateId ? 'Редактирование шаблона' : 'Выберите шаблон тренировки:'}
-            </h3>
-
-            {editingTemplateId ? (
-              <div className="space-y-4">
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <h4 className="font-medium mb-2">Текущие упражнения:</h4>
-                  <ul className="list-disc pl-5">
-                    {editingTemplate?.exerciseIds.map((id) => {
-                      const exercise = exercises.find((ex) => ex.id === id);
-                      return <li key={id}>{exercise?.title || id}</li>;
-                    })}
-                  </ul>
-                </div>
-
-                <ExerciseList
-                  exercises={exercises}
-                  onSelectExercises={(selectedIds) => {
-                    if (editingTemplateId) {
-                      updateTemplate(editingTemplateId, selectedIds);
-                      setEditingTemplateId(null);
-                    }
-                  }}
-                />
-
-                <Button
-                  variant="outline"
-                  onClick={() => setEditingTemplateId(null)}
-                  className="w-full">
-                  Отменить редактирование
-                </Button>
-              </div>
-            ) : (
-              <>
-                <ul className="space-y-2">
-                  {templates.map((template) => (
-                    <li key={template.id} className="p-2 border rounded-lg hover:bg-gray-50">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-semibold">{template.description || 'Без названия'}</p>
-                          <ul className="list-disc pl-5 mt-1 text-sm text-gray-600">
-                            {template.exerciseIds.map((id) => {
-                              const exercise = exercises.find((ex) => ex.id === id);
-                              return <li key={id}>{exercise?.title || id}</li>;
-                            })}
-                          </ul>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddTrainingFromTemplate(template.id);
-                            }}>
-                            Выбрать
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingTemplateId(template.id);
-                            }}>
-                            Изменить
-                          </Button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                <Button onClick={() => setIsTemplateListVisible(false)} className="mt-4">
-                  Назад
-                </Button>
-              </>
-            )}
-          </div>
         )
       ) : (
         <div className="flex gap-4">
