@@ -202,10 +202,9 @@ export const MyCalendar: React.FC = () => {
           onStartTraining={handleStartTraining}
         />
       )}
-
-      {/* Компонент создания тренировки */}
-      {date instanceof Date && <CreateTraining selectedDate={date} />}
-      
+      <div className="hidden sm:block">
+        {date instanceof Date && <CreateTraining selectedDate={date} />}
+      </div>
     </div>
   );
 };
