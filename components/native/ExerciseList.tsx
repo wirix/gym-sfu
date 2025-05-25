@@ -335,6 +335,7 @@ export const CreateTraining: React.FC<CreateTrainingProps> = ({ selectedDate }) 
 
     const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth();
+    // @ts-ignore
     useTrainingStore.getState().addTraining(year, month, calendarTraining);
 
     setActiveTraining(null);

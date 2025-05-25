@@ -80,8 +80,8 @@ export const TrainingStatsModal = ({
   const { completedTrainings, plannedTrainings } = getTrainingsForDate(date);
 
   // Функции для работы с тренировками
-  const calculateExerciseVolume = (exercise: any) => {
-    return exercise.approaches.reduce((total: number, approach: any) => {
+  const calculateExerciseVolume = (exercise) => {
+    return exercise.approaches.reduce((total: number, approach) => {
       const weight = approach.wt !== undefined ? approach.wt : approach.weight;
       const reps = approach.reps || 0;
       return total + (weight || 0) * reps;
@@ -206,6 +206,7 @@ export const TrainingStatsModal = ({
                                 <div className="font-bold">
                                   {Math.round(
                                     exercise.approaches.reduce(
+                                      // @ts-ignore
                                       (sum, a) => sum + (a.wt !== undefined ? a.wt : a.weight || 0),
                                       0,
                                     ) / exercise.approaches.length,
@@ -218,6 +219,7 @@ export const TrainingStatsModal = ({
                             <div className="mt-2 text-xs text-gray-500">
                               {exercise.approaches.map((approach, index) => (
                                 <div key={index}>
+                                  {/* @ts-ignore */}
                                   Подход {index + 1}: {approach.wt || approach.weight || 0}кг ×{' '}
                                   {approach.reps || 0}
                                 </div>

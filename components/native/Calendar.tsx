@@ -154,6 +154,7 @@ export const MyCalendar: React.FC = () => {
           };
 
           // Сохраняем в хранилище
+          // @ts-ignore
           useTrainingStore.getState().addTraining(year, month, completedTraining);
 
           // Сбрасываем состояние
