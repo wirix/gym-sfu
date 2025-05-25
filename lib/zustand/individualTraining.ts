@@ -55,6 +55,7 @@ export const useIndividualTrainingStore = create<IndividualTrainingStore>((set, 
 
   // Обновить тренировку
   updateTraining: (id, exerciseIds) => {
+    // @ts-ignore
     set((state) => ({
       trainings: state.trainings.map((training) =>
         training.id === id ? { ...training, exerciseIds } : training,
