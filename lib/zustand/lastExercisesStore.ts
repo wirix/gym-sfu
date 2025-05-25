@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface Approach {
   weight: number | null;
@@ -17,20 +18,28 @@ interface LastExercisesStore {
   getExercise: (exerciseId: string) => LastExercise | undefined;
 }
 
-export const useLastExercisesStore = create<LastExercisesStore>((set, get) => ({
-  exercises: {},
-  updateExercise: (exerciseId, approaches) => {
-    set((state) => ({
-      exercises: {
-        ...state.exercises,
-        [exerciseId]: {
-          id: exerciseId,
-          approaches: approaches,
-        },
+export const useLastExercisesStore = create<LastExercisesStore>()(
+  persist<LastExercisesStore>(
+    (set, get) => ({
+      exercises: {},
+      updateExercise: (exerciseId, approaches) => {
+        set((state) => ({
+          exercises: {
+            ...state.exercises,
+            [exerciseId]: {
+              id: exerciseId,
+              approaches: approaches,
+            },
+          },
+        }));
       },
-    }));
-  },
-  getExercise: (exerciseId) => {
-    return get().exercises[exerciseId];
-  },
-}));
+      getExercise: (exerciseId) => {
+        return get().exercises[exerciseId];
+      },
+    }),
+    {
+      name: 'last-exercises-storage',
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
+);
